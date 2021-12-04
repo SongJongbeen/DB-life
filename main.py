@@ -7,7 +7,7 @@ while True:
     command = int(input('command: '))
     if command == 0:
         key = count_db('CONTRACT') + 1
-        Eno = int(input('input the name of employee in charge: '))
+        Eno = int(input('input the number of employee in charge: '))
         CLno = int(input('input the name of the client (if new client, input 0): '))
         if CLno == 0:
             CL_key = count_db('CLIENT') + 1
@@ -15,8 +15,11 @@ while True:
             Rname = input('input the name of recipient: ')
             CLdata = [CL_key, CLname, Rname, 0]
             create_db('CLIENT', CLdata)
+        else:
+            CL_key = CLno
         Ctype = input('input the type of the contract: ')
-        Cdata = [key, Eno, CLno, Ctype, 0]
+        Cdata = [key, Eno, CL_key, Ctype, 0]
+        create_db('CONTRACT', Cdata)
     elif command == 1:
         key = count_db('EMPLOYEE') + 1
         Ename = input('input the name of new employee: ')
@@ -25,8 +28,6 @@ while True:
     elif command == 2:
         key = input('input the contract code: ')
         update_db('CONTRACT', 'Cno', key, 'Cactive', 1)
-        CLno = search_db('CLno', 'CONTRACT', 'Cno', key)
-        delete_db('CLIENT', 'CLno', CLno)
     elif command == 3:
         key = input('input the contract code: ')
         print('which part do you want to fix? 1. employee in charge 2. client 3. contract type')
@@ -34,6 +35,7 @@ while True:
         new_data = input('input new data: ')
         update_db('CONTRACT', 'Cno', key, field, new_data)
     elif command == 4:
+        print('input \'.exit\' to terminate')
         os.system('sqlite3 dblife.db')
     elif command == 5:
         print('1. 모든 직원 임금 및 성과금 지출 (Capital - LaborCost - BonusCost)')

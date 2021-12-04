@@ -6,6 +6,14 @@ def create_db(table, data):
     c = conn.cursor()
     if table == 'EMPLOYEE':
         c.execute('INSERT INTO EMPLOYEE(Eno, Ename, Erole, Eyear, Ewage, Ebonus) VALUES(?,?,?,?,?,?)', data)
+    elif table == 'CONTRACT':
+        c.execute('INSERT INTO CONTRACT(Cno, Eno, CLno, Ctype, Cactive) VALUES(?,?,?,?,?)', data)
+    elif table == 'CLIENT':
+        c.execute('INSERT INTO CLIENT(CLno, CLname, Rname, CLhistory) VALUES(?,?,?,?)', data)
+    elif table == 'FINANCE':
+        c.execute('INSERT INTO FINANCE(Fyear, Capital, LaborCost, Premium, Payout, BonusCost) VALUES(?,?,?,?,?,?)', data)
+    elif table == 'CTYPE':
+        c.execute('INSERT INTO CTYPE(Ctype, Premium, Payout) VALUES(?,?,?)', data)
 
     c.execute('SELECT * FROM %s' % table)
     for row in c.fetchall():
