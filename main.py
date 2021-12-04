@@ -35,8 +35,6 @@ while True:
         update_db('CONTRACT', 'Cno', key, field, new_data)
     elif command == 4:
         os.system('sqlite3 dblife.db')
-        print('copy and paste below')
-        print('sqlite3 dblife.db')
     elif command == 5:
         print('1. 모든 직원 임금 및 성과금 지출 (Capital - LaborCost - BonusCost)')
         print('2. 모든 보험료 수익 정산 (Capital + Premium)')
