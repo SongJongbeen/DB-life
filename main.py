@@ -34,7 +34,7 @@ while True:
         new_data = input('input new data: ')
         update_db('CONTRACT', 'Cno', key, field, new_data)
     elif command == 4:
-        os.system('start')
+        os.system('sqlite3 dblife.db')
         print('copy and paste below')
         print('sqlite3 dblife.db')
     elif command == 5:
