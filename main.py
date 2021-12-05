@@ -1,16 +1,16 @@
-from db_cuds import create_db, update_db, delete_db, search_db, show_db, count_db
+from db_cuds import create_db, update_db, execute_db, delete_db, search_db, show_db, count_db, search_max_min_db
 import os
 
 while True:
     print('0. new contract 1. new employee 2. activate contract 3. fix contract '
-          '4. fix db 5. next year 6. analysis 7. terminate program')
+          '4. open db 5. next year 6. analysis 7. terminate program')
     command = int(input('command: '))
     if command == 0:
-        key = count_db('CONTRACT') + 1
+        key = search_max_min_db('Cno', 'CONTRACT') + 1
         Eno = int(input('input the number of employee in charge: '))
         CLno = int(input('input the name of the client (if new client, input 0): '))
         if CLno == 0:
-            CL_key = count_db('CLIENT') + 1
+            CL_key = search_max_min_db('CLno', 'CLIENT') + 1
             CLname = input('input the name of client: ')
             Rname = input('input the name of recipient: ')
             CLdata = [CL_key, CLname, Rname, 0]
@@ -38,31 +38,84 @@ while True:
         print('input \'.exit\' to terminate')
         os.system('sqlite3 dblife.db')
     elif command == 5:
-        print('1. 모든 직원 임금 및 성과금 지출 (Capital - LaborCost - BonusCost)')
-        print('2. 모든 보험료 수익 정산 (Capital + Premium)')
-        print('\t2.1. Premium 계산법: sum(from CONTRACT count Ctype = 각 A~E 따라서 from CTYPE 에서 Premium)')
-        print('3. 모든 보험금 지출 정산 (Capital - Payout)')
-        print('\t3.1. Payout 계산법: sum(from CONTRACT select Cactive = 1 count Ctype = 각 A~E 따라서 from CTYPE 에서 Payout)')
-        print('4. Cactive가 1인 CONTRACT data 모두 삭제')
-        print('5. CLhisotry 업데이트: 각각 낸 금액만큼 더해줌')
-        print('6. 직원 정보 업데이트: 아래의 규칙을 따름')
-        print('\t6.1. 직원 모두의 Eyear += 1')
-        print('\t6.2. Erole: Eyear이 5 이상이면 주임 / Eyear이 7년 이상이면 대리 / Eyear이 10년 이상이면 과장 / '
-              'Eyear이 15년 이상이면 차장 / Eyear이 19년 이상이면 부장')
-        print('\t\t6.2.1. 이 과정에서 승진하게 되는 사람 리스트에 따로 정리')
-        print('\t6.3. Ewage: 엑셀 파일 참조')
-        print('\t6.4. Ebonus: from CONTRACT Eno가 본인인 것의 개수 * 100')
-        print('\t\t6.4.1. 이 과정에서 가장 Ebonus가 높았던 사람 따로 정리')
-        print('7. 다음 년도 Fyear row 생성. 1~3 계산한 값이 Capital값. 각 값 계산은 아래를 따름.')
-        print('\t7.1. LaborCost: Ewage의 합산값')
-        print('\t7.2. BonusCost: Ebonus의 합산값')
-        print('\t7.3. Premium: sum(from CONTRACT count Ctype = 각 A~E 따라서 from CTYPE 에서 Premium)')
-        print('\t7.4. Payout: sum(from CONTRACT select Cactive = 1 count Ctype = 각 A~E 따라서 from CTYPE 에서 Payout)')
-        print('8. 분석 결과 보여주기')
-        print('8.1. 당해 승진한 사람은 ~~ 입니다. 축하합니다.')
-        print('8.2. 지난해 1년간 결산 결과는 흑자/적자 입니다. 총+/-~~~~원을 벌/잃었습니다. Fyear 당해년도 Capital - 작년도 Capital')
-        print('8.3. 지난해 최우수 실적은 ~~ 입니다. 축하합니다. 가장 Bonus가 높았던 직원')
-        print('8.4. 지금까지 최우수 고개은 ~~ 입니다. 가장 CLhistory가 높은 고객')
+        year = int(search_max_min_db('Fyear', 'FINANCE'))
+        print('%s년 연말정산을 진행하고 다음 년도로 넘어갑니다.' % year)
+
+        # 자금 계산
+        Capital = search_db('Capital', 'FINANCE', 'Fyear', year, fetch='one')
+        LaborCost = execute_db('SELECT SUM(Ewage) FROM EMPLOYEE')
+        BonusCost = execute_db('SELECT SUM(Ebonus) FROM EMPLOYEE')
+        Premium = execute_db('SELECT SUM(Premium) FROM (SELECT COUNT(C.Ctype) * Premium AS Premium FROM Ctype T, CONTRACT C WHERE C.Ctype = T.Ctype GROUP BY C.Ctype)')
+        Payout = execute_db('SELECT SUM(Payout) FROM (SELECT COUNT(C.Ctype) * Payout AS Payout FROM Ctype T, CONTRACT C WHERE C.Ctype = T.Ctype AND C.Cactive = 1 GROUP BY C.Ctype)')
+        if Payout == None:
+            Payout = 0
+
+        prev_Capital = Capital
+        Capital = Capital - LaborCost - BonusCost - Payout + Premium
+        update_db('FINANCE', 'Fyear', year, 'Capital', Capital)
+
+        # 발동된 계약 제거
+        delete_db('CONTRACT', 'Cactive', 1)
+
+        # CLhistory 업데이트
+        execute_db('SELECT C.CLno, T.Premium AS CLhistory FROM Ctype T, CONTRACT C WHERE C.Ctype = T.Ctype;', role='else')
+        vip = execute_db('SELECT CLname from CLIENT where CLhistory = (Select max(CLhistory) from CLIENT)', role='findmany')
+
+        # 직원 정보 업데이트
+        execute_db('UPDATE EMPLOYEE SET Eyear = Eyear + 1', role='else')
+        execute_db('UPDATE EMPLOYEE SET Erole = 1 WHERE Eyear >= 5 AND Eyear < 7', role='else')
+        execute_db('UPDATE EMPLOYEE SET Erole = 2 WHERE Eyear >= 7 AND Eyear < 10', role='else')
+        execute_db('UPDATE EMPLOYEE SET Erole = 3 WHERE Eyear >= 10 AND Eyear < 15', role='else')
+        execute_db('UPDATE EMPLOYEE SET Erole = 4 WHERE Eyear >= 15 AND Eyear < 19', role='else')
+        execute_db('UPDATE EMPLOYEE SET Erole = 5 WHERE Eyear >= 19', role='else')
+
+        promotion = execute_db('SELECT Ename FROM EMPLOYEE WHERE Eyear=5 OR Eyear=7 OR Eyear=10 OR Eyear=15 OR Eyear=19', role='findmany')
+
+        execute_db('UPDATE EMPLOYEE SET Ewage = 2600 + 200 * Eyear WHERE Eyear <= 2', role='else')
+        execute_db('UPDATE EMPLOYEE SET Ewage = 3300 WHERE Eyear = 3', role='else')
+        execute_db('UPDATE EMPLOYEE SET Ewage = 4200 WHERE Eyear = 4', role='else')
+        execute_db('UPDATE EMPLOYEE SET Ewage = 4200 + (Eyear - 4) * 300 WHERE Eyear = 5 OR Eyear = 6', role='else')
+        execute_db('UPDATE EMPLOYEE SET Ewage = 5200 WHERE Eyear = 7', role='else')
+        execute_db('UPDATE EMPLOYEE SET Ewage = 5200 + (Eyear - 7) * 300 WHERE Eyear >=  8 AND Eyear < 18', role='else')
+        execute_db('UPDATE EMPLOYEE SET Ewage = 8000 WHERE Eyear = 18', role='else')
+        execute_db('UPDATE EMPLOYEE SET Ewage = 10000 WHERE Eyear = 19', role='else')
+        execute_db('UPDATE EMPLOYEE SET Ewage = 10100 WHERE Eyear = 20', role='else')
+
+        mvp = execute_db('SELECT Ename FROM EMPLOYEE WHERE Eno = (SELECT Eno FROM (SELECT Eno, COUNT(Eno) * 100 AS Ebonus FROM CONTRACT GROUP BY Eno ORDER BY Ebonus DESC LIMIT 1))', role='findmany')
+        execute_db('SELECT Eno, COUNT(Eno) * 100 AS Ebonus FROM CONTRACT GROUP BY Eno', role='else')
+
+        # 내년도 FINANCE row 추가
+        LaborCost = execute_db('SELECT SUM(Ewage) FROM EMPLOYEE')
+        BonusCost = execute_db('SELECT SUM(Ebonus) FROM EMPLOYEE')
+        Premium = execute_db('SELECT SUM(Premium) FROM (SELECT COUNT(C.Ctype) * Premium AS Premium FROM Ctype T, CONTRACT C WHERE C.Ctype = T.Ctype GROUP BY C.Ctype)')
+        Payout = 0
+
+        create_db('FINANCE', [year+1, Capital, LaborCost, Premium, Payout, BonusCost])
+
+        # 흑자여부 계산
+        Difference = Capital - prev_Capital
+        finance_result = ''
+        if Difference > 0:
+            finance_result = '흑자'
+        elif Difference == 0:
+            finance_result = '변동없음'
+        elif Difference < 0:
+            finance_result = '적자'
+
+        # 분석 결과 출력
+        print('분석 결과입니다.')
+        print('올해 남은 금액은 %d 원입니다.' % Capital)
+        print('한 해간 결산 결과는 %s 입니다. 변동 금액: %d 원' % (finance_result, Difference))
+        print('승진한 사람 명단입니다. 축하합니다.')
+        for person in promotion:
+            print(person)
+        print('가장 실적이 좋았던 직원 명단입니다. 축하합니다.')
+        for person in mvp:
+            print(person)
+        print('VIP 고객 리스트입니다. 확인바랍니다.')
+        for person in vip:
+            print(person)
+
     elif command == 6:
         print('가장 많은 계약을 따낸 직원 이름')
         print('가장 보험료를 많이 지출한 고객 이름 (VIP)')

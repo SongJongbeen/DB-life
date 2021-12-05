@@ -39,6 +39,23 @@ def update_db(table, key, key_value, field, new_data):
     conn.close()
 
 
+def execute_db(message, role='find'):
+    conn = sqlite3.connect('dblife.db', isolation_level=None)
+    c = conn.cursor()
+    c.execute(message)
+    if role == 'find':
+        result = c.fetchone()[0]
+        conn.close()
+        return result
+    elif role == 'findmany':
+        result = []
+        for row in c.fetchall():
+            result.append(row[0])
+        return result
+    elif role == 'else':
+        conn.close()
+
+
 def delete_db(table, field, key):
     conn = sqlite3.connect('dblife.db', isolation_level=None)
     c = conn.cursor()
@@ -53,15 +70,18 @@ def delete_db(table, field, key):
     conn.close()
 
 
-def search_db(select_value, table, where_field, where_value):
+def search_db(select_value, table, where_field, where_value, fetch='many'):
     conn = sqlite3.connect('dblife.db', isolation_level=None)
     c = conn.cursor()
 
     c.execute('SELECT %s FROM %s WHERE %s=:%s' % (select_value, table, where_field, where_field),
               {where_field: where_value})
-    for row in c.fetchall():
-        print(row[0])
-        result = row[0]
+    if fetch == 'many':
+        result = []
+        for row in c.fetchall():
+            result.append(row[0])
+    elif fetch == 'one':
+        result = c.fetchone()[0]
 
     conn.close()
     return result
@@ -89,6 +109,17 @@ def count_db(table):
 
     conn.close()
     return last_key
+
+
+def search_max_min_db(field, table, role='max'):
+    conn = sqlite3.connect('dblife.db', isolation_level=None)
+    c = conn.cursor()
+
+    c.execute('SELECT %s(%s) FROM %s' % (role, field, table))
+    result = c.fetchone()[0]
+
+    conn.close()
+    return result
 
 
 def backup_db(conn):
