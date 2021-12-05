@@ -9,7 +9,7 @@ while True:
     if command == 0:
         key = search_max_min_db('Cno', 'CONTRACT') + 1
         Eno = int(input('input the number of employee in charge: '))
-        CLno = int(input('input the name of the client (if new client, input 0): '))
+        CLno = int(input('input the number of the client (if new client, input 0): '))
         if CLno == 0:
             CL_key = search_max_min_db('CLno', 'CLIENT') + 1
             CLname = input('input the name of client: ')
