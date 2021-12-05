@@ -117,8 +117,11 @@ while True:
             print(person)
 
     elif command == 6:
-        print('가장 많은 계약을 따낸 직원 이름')
-        print('가장 보험료를 많이 지출한 고객 이름 (VIP)')
-        print('해당년도 현자금 / 예상 인건비 지출/ 예상 보험료 수입/ 예상 보험금 지출/ 예상 성과금 지출')
+        elif command == 6:
+        print(execute_db('select Ename FROM EMPLOYEE WHERE Eno = (select eno from contract group by eno order by count(eno) desc limit 1)', role='findmany'))
+        print(execute_db('SELECT c.CLname from CLIENT c, CONTRACT t WHERE t.Ctype = "E" AND c.CLno = t.CLno', role='findmany'))
+        total_finance = [execute_db('SELECT capital FROM FINANCE'), execute_db('SELECT laborcost FROM FINANCE'), execute_db('SELECT premium FROM FINANCE'),execute_db('SELECT payout FROM FINANCE'), execute_db('SELECT bonuscost FROM FINANCE')]
+        print(total_finance)
+        
     elif command == 7:
         break
