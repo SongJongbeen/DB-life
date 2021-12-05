@@ -16,8 +16,8 @@ def create_db(table, data):
         c.execute('INSERT INTO CTYPE(Ctype, Premium, Payout) VALUES(?,?,?)', data)
 
     c.execute('SELECT * FROM %s' % table)
-    for row in c.fetchall():
-        print(row)
+    # for row in c.fetchall():
+    #     print(row)
     conn.commit()
     backup_db(conn)
 
@@ -31,8 +31,8 @@ def update_db(table, key, key_value, field, new_data):
               {field: new_data, key: key_value})
 
     c.execute('SELECT * FROM %s' % table)
-    for row in c.fetchall():
-        print(row)
+    # for row in c.fetchall():
+    #     print(row)
     conn.commit()
     backup_db(conn)
 
@@ -62,8 +62,8 @@ def delete_db(table, field, key):
     c.execute('DELETE FROM %s WHERE %s=:%s' % (table, field, field), {field: key})
 
     c.execute('SELECT * FROM %s' % table)
-    for row in c.fetchall():
-        print(row)
+    # for row in c.fetchall():
+    #     print(row)
     conn.commit()
     backup_db(conn)
 
@@ -92,8 +92,8 @@ def show_db(table='*'):
     c = conn.cursor()
 
     c.execute('SELECT * FROM %s' % table)
-    for row in c.fetchall():
-        print(row[0])
+    # for row in c.fetchall():
+    #     print(row[0])
 
     conn.close()
 
@@ -127,4 +127,4 @@ def backup_db(conn):
         with open('dump.sql', 'w') as f:
             for line in conn.iterdump():
                 f.write('%s\n' % line)
-            print('Backup Completed')
+            # print('Backup Completed')

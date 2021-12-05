@@ -2,6 +2,7 @@ from db_cuds import create_db, update_db, execute_db, delete_db, search_db, show
 import os
 
 while True:
+    print('')
     print('0. new contract 1. new employee 2. activate contract 3. fix contract '
           '4. open db 5. next year 6. analysis 7. terminate program')
     command = int(input('command: '))
@@ -20,23 +21,32 @@ while True:
         Ctype = input('input the type of the contract: ')
         Cdata = [key, Eno, CL_key, Ctype, 0]
         create_db('CONTRACT', Cdata)
+        print('new contract created')
+
     elif command == 1:
         key = count_db('EMPLOYEE') + 1
         Ename = input('input the name of new employee: ')
         data = [key, Ename, 0, 0, 2600, 0]
         create_db('EMPLOYEE', data)
+        print('new employee hired')
+
     elif command == 2:
         key = input('input the contract code: ')
         update_db('CONTRACT', 'Cno', key, 'Cactive', 1)
+        print('new contract created')
+
     elif command == 3:
         key = input('input the contract code: ')
         print('which part do you want to fix? 1. employee in charge 2. client 3. contract type')
         field = input('input: ')
         new_data = input('input new data: ')
         update_db('CONTRACT', 'Cno', key, field, new_data)
+        print('contract fixed')
+
     elif command == 4:
         print('input \'.exit\' to terminate')
         os.system('sqlite3 dblife.db')
+
     elif command == 5:
         year = int(search_max_min_db('Fyear', 'FINANCE'))
         print('%s년 연말정산을 진행하고 다음 년도로 넘어갑니다.' % year)
@@ -108,20 +118,20 @@ while True:
         print('한 해간 결산 결과는 %s 입니다. 변동 금액: %d 원' % (finance_result, Difference))
         print('승진한 사람 명단입니다. 축하합니다.')
         for person in promotion:
-            print(person)
+            print('\t' + person)
         print('가장 실적이 좋았던 직원 명단입니다. 축하합니다.')
         for person in mvp:
-            print(person)
+            print('\t' + person)
         print('VIP 고객 리스트입니다. 확인바랍니다.')
         for person in vip:
-            print(person)
+            print('\t' + person)
 
     elif command == 6:
-        elif command == 6:
+        year = int(search_max_min_db('Fyear', 'FINANCE'))
         print(execute_db('select Ename FROM EMPLOYEE WHERE Eno = (select eno from contract group by eno order by count(eno) desc limit 1)', role='findmany'))
         print(execute_db('SELECT c.CLname from CLIENT c, CONTRACT t WHERE t.Ctype = "E" AND c.CLno = t.CLno', role='findmany'))
-        total_finance = [execute_db('SELECT capital FROM FINANCE'), execute_db('SELECT laborcost FROM FINANCE'), execute_db('SELECT premium FROM FINANCE'),execute_db('SELECT payout FROM FINANCE'), execute_db('SELECT bonuscost FROM FINANCE')]
+        total_finance = [execute_db('SELECT Capital FROM FINANCE WHERE Fyear = %d' % year), execute_db('SELECT LaborCost FROM FINANCE WHERE Fyear = %d' % year), execute_db('SELECT Premium FROM FINANCE WHERE Fyear = %d' % year), execute_db('SELECT Payout FROM FINANCE WHERE Fyear = %d' % year), execute_db('SELECT BonusCost FROM FINANCE WHERE Fyear = %d' % year)]
         print(total_finance)
-        
+
     elif command == 7:
         break
