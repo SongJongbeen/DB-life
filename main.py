@@ -118,13 +118,13 @@ while True:
         print('한 해간 결산 결과는 %s 입니다. 변동 금액: %d 원' % (finance_result, Difference))
         print('승진한 사람 명단입니다. 축하합니다.')
         for person in promotion:
-            print('\t' + person)
+            print('  ' + person)
         print('가장 실적이 좋았던 직원 명단입니다. 축하합니다.')
         for person in mvp:
-            print('\t' + person)
+            print('  ' + person)
         print('VIP 고객 리스트입니다. 확인바랍니다.')
         for person in vip:
-            print('\t' + person)
+            print('  ' + person)
 
     elif command == 6:
         year = int(search_max_min_db('Fyear', 'FINANCE'))
