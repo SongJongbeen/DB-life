@@ -135,3 +135,7 @@ while True:
 
     elif command == 7:
         break
+        
+        
+    input("\n\n계속하려면 Enter를 누르세요")
+    os.system("cls")
