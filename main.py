@@ -47,7 +47,7 @@ while True:
         elif command == 2:
             key = input('input the contract code: ')
             update_db('CONTRACT', 'Cno', key, 'Cactive', 1)
-            print('new contract created')
+            print('contract activated')
 
         elif command == 3:
             key = input('input the contract code: ')
