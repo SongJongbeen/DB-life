@@ -68,7 +68,12 @@ while True:
         delete_db('CONTRACT', 'Cactive', 1)
 
         # CLhistory 업데이트
-        execute_db('SELECT C.CLno, T.Premium AS CLhistory FROM Ctype T, CONTRACT C WHERE C.Ctype = T.Ctype;', role='else')
+        CLhistory_id = execute_db('SELECT C.CLno FROM Ctype T, CONTRACT C WHERE C.Ctype = T.Ctype;', role='findmany')
+        CLhistory = execute_db('SELECT T.Premium AS CLhistory FROM Ctype T, CONTRACT C WHERE C.Ctype = T.Ctype;', role='findmany')
+
+        for i in range(len(CLhistory_id)):
+            execute_db('UPDATE CLIENT SET CLhistory = %d WHERE CLno = %d' % (CLhistory[i], CLhistory_id[i]), role='else')
+        
         vip = execute_db('SELECT CLname from CLIENT where CLhistory = (Select max(CLhistory) from CLIENT)', role='findmany')
 
         # 직원 정보 업데이트
@@ -92,7 +97,11 @@ while True:
         execute_db('UPDATE EMPLOYEE SET Ewage = 10100 WHERE Eyear = 20', role='else')
 
         mvp = execute_db('SELECT Ename FROM EMPLOYEE WHERE Eno = (SELECT Eno FROM (SELECT Eno, COUNT(Eno) * 100 AS Ebonus FROM CONTRACT GROUP BY Eno ORDER BY Ebonus DESC LIMIT 1))', role='findmany')
-        execute_db('SELECT Eno, COUNT(Eno) * 100 AS Ebonus FROM CONTRACT GROUP BY Eno', role='else')
+        Ebonus_id = execute_db('SELECT Eno FROM CONTRACT GROUP BY Eno', role='findmany')
+        Ebonus = execute_db('SELECT COUNT(Eno) * 100 AS Ebonus FROM CONTRACT GROUP BY Eno', role='findmany')
+
+        for i in range(len(Ebonus_id)):
+            execute_db('UPDATE EMPLOYEE SET Ebonus = %d WHERE Eno = %d' % (Ebonus[i], Ebonus_id[i]), role='else')
 
         # 내년도 FINANCE row 추가
         LaborCost = execute_db('SELECT SUM(Ewage) FROM EMPLOYEE')
