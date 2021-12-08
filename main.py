@@ -17,7 +17,16 @@ while True:
             CLdata = [CL_key, CLname, Rname, 0]
             create_db('CLIENT', CLdata)
         else:
-            CL_key = CLno
+            CL_list = execute_db('SELECT CLno FROM CLIENT', role='findmany')
+            CL_list = dict.fromkeys(CL_list, 0)
+            try:
+                CL_list[CLno]
+            except KeyError:
+                print('존재하지 않는 고객입니다.')
+
+                input("\n\n계속하려면 Enter를 누르세요")
+                os.system("cls")
+                continue
                 
         Ctype = input('input the type of the contract: ')
         Cdata = [key, Eno, CL_key, Ctype, 0]
