@@ -16,8 +16,7 @@ def create_db(table, data):
         c.execute('INSERT INTO CTYPE(Ctype, Premium, Payout) VALUES(?,?,?)', data)
 
     c.execute('SELECT * FROM %s' % table)
-    # for row in c.fetchall():
-    #     print(row)
+
     conn.commit()
     backup_db(conn)
 
@@ -31,8 +30,7 @@ def update_db(table, key, key_value, field, new_data):
               {field: new_data, key: key_value})
 
     c.execute('SELECT * FROM %s' % table)
-    # for row in c.fetchall():
-    #     print(row)
+
     conn.commit()
     backup_db(conn)
 
@@ -62,8 +60,7 @@ def delete_db(table, field, key):
     c.execute('DELETE FROM %s WHERE %s=:%s' % (table, field, field), {field: key})
 
     c.execute('SELECT * FROM %s' % table)
-    # for row in c.fetchall():
-    #     print(row)
+
     conn.commit()
     backup_db(conn)
 
@@ -86,16 +83,6 @@ def search_db(select_value, table, where_field, where_value, fetch='many'):
     conn.close()
     return result
 
-
-def show_db(table='*'):
-    conn = sqlite3.connect('dblife.db', isolation_level=None)
-    c = conn.cursor()
-
-    c.execute('SELECT * FROM %s' % table)
-    # for row in c.fetchall():
-    #     print(row[0])
-
-    conn.close()
 
 
 def count_db(table):
@@ -127,4 +114,4 @@ def backup_db(conn):
         with open('dump.sql', 'w') as f:
             for line in conn.iterdump():
                 f.write('%s\n' % line)
-            # print('Backup Completed')
+
