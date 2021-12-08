@@ -17,14 +17,7 @@ while True:
             CLdata = [CL_key, CLname, Rname, 0]
             create_db('CLIENT', CLdata)
         else:
-            if isinstance(CLno, str):
-                CL_key = CLno
-            else:
-                print('0이 아닌 숫자를 입력했습니다.')
-
-                input("\n\n계속하려면 Enter를 누르세요")
-                os.system("cls")
-                continue
+            CL_key = CLno
                 
         Ctype = input('input the type of the contract: ')
         Cdata = [key, Eno, CL_key, Ctype, 0]
