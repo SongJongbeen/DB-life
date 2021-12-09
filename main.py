@@ -1,4 +1,4 @@
-from db_cuds import create_db, update_db, execute_db, delete_db, search_db, show_db, count_db, search_max_min_db
+from db_cuds import create_db, update_db, execute_db, delete_db, search_db, count_db, search_max_min_db
 import os
 
 
@@ -145,40 +145,56 @@ while True:
                 finance_result = '적자'
 
             # 분석 결과 출력
-            print('분석 결과입니다.')
+            print('분석 결과입니다.\n')
             print('올해 남은 금액은 %d 원입니다.' % Capital)
             print('한 해간 결산 결과는 %s 입니다. 변동 금액: %d 원' % (finance_result, Difference))
-            print('승진한 사람 명단입니다. 축하합니다.')
+            print('\n승진한 사람 명단입니다. 축하합니다.')
             for person in promotion:
                 print('  ' + person)
-            print('가장 실적이 좋았던 직원 명단입니다. 축하합니다.')
+            print('\n가장 실적이 좋았던 직원 명단입니다. 축하합니다.')
             for person in mvp:
                 print('  ' + person)
-            print('VIP 고객 리스트입니다. 확인바랍니다.')
+            print('\nVIP 고객 리스트입니다. 확인바랍니다.')
             for person in vip:
                 print('  ' + person)
 
         elif command == 6:
             year = int(search_max_min_db('Fyear', 'FINANCE'))
-            print(execute_db(
-                'select Ename FROM EMPLOYEE WHERE Eno = (select eno from contract group by eno order by count(eno) desc limit 1)',
-                role='findmany'))
-            print(execute_db('SELECT c.CLname from CLIENT c, CONTRACT t WHERE t.Ctype = "E" AND c.CLno = t.CLno',
-                             role='findmany'))
+            mvp = execute_db(
+                'SELECT Ename FROM EMPLOYEE WHERE Eno = (SELECT Eno FROM (SELECT Eno, COUNT(Eno) * 100 AS Ebonus FROM CONTRACT GROUP BY Eno ORDER BY Ebonus DESC LIMIT 1))',
+                role='findmany')
+            vip = execute_db('SELECT CLname from CLIENT where CLhistory = (Select max(CLhistory) from CLIENT)',
+                             role='findmany')
+
+            print('가장 실적이 좋았던 직원 명단입니다. 축하합니다.')
+            for person in mvp:
+                print('  ' + person)
+            print('\nVIP 고객 리스트입니다. 확인바랍니다.')
+            for person in vip:
+                print('  ' + person)
+
             total_finance = [execute_db('SELECT Capital FROM FINANCE WHERE Fyear = %d' % year),
                              execute_db('SELECT LaborCost FROM FINANCE WHERE Fyear = %d' % year),
                              execute_db('SELECT Premium FROM FINANCE WHERE Fyear = %d' % year),
                              execute_db('SELECT Payout FROM FINANCE WHERE Fyear = %d' % year),
                              execute_db('SELECT BonusCost FROM FINANCE WHERE Fyear = %d' % year)]
-            print(total_finance)
+            intro_sent = ["해당년도 현자금", "예상인건비 지출", "예상 보험료 수입", "예상 보험금 지출", "예상 성과금 지출"]
+            result = {}
+            for i in range(len(total_finance)):
+                result[intro_sent[i]] = total_finance[i]
+
+            print()
+            for k, v in result.items():
+                print(f"{k}: {v}")
 
         elif command == 7:
             break
         else:
             print("Invalid Command!")
 
-    except Exception:
+    except Exception as e:
         print("오류가 발생했습니다. 처음으로 돌아갑니다.")
+        print("오류내용:", e)
 
     input("\n\n계속하려면 Enter를 누르세요")
     os.system("cls")
