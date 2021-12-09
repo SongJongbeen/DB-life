@@ -16,7 +16,7 @@ while True:
             key = search_max_min_db('Cno', 'CONTRACT') + 1
             Eno = int(input('input the number of employee in charge: '))
             CLno = int(input('input the number of the client (if new client, input 0): '))
-            if CLno == 0: # 신규 고객인 경우 
+            if CLno == 0: # 신규 고객인 경우
                 CL_key = search_max_min_db('CLno', 'CLIENT') + 1
                 CLname = input('input the name of client: ')
                 Rname = input('input the name of recipient: ')
@@ -27,7 +27,7 @@ while True:
                 CL_list = execute_db('SELECT CLno FROM CLIENT', role='findmany')
                 CL_list = dict.fromkeys(CL_list, 0)
                 # 고객이 존재 하는지 확인 후 처리
-                try: 
+                try:
                     CL_list[CLno]
                 except KeyError:
                     print('존재하지 않는 고객입니다.')
@@ -43,6 +43,7 @@ while True:
             create_db('CONTRACT', Cdata)
             print('new contract created')
 
+        # 새로운 직원 고용
         elif command == 1:
             key = count_db('EMPLOYEE') + 1
             Ename = input('input the name of new employee: ')
@@ -50,11 +51,13 @@ while True:
             create_db('EMPLOYEE', data)
             print('new employee hired')
 
+        # 계약 발동
         elif command == 2:
             key = input('input the contract code: ')
             update_db('CONTRACT', 'Cno', key, 'Cactive', 1)
             print('contract activated')
 
+        # 계약 내용 수정
         elif command == 3:
             key = input('input the contract code: ')
             print('which part do you want to fix? 1. employee in charge 2. client 3. contract type')
@@ -63,12 +66,16 @@ while True:
             update_db('CONTRACT', 'Cno', key, field, new_data)
             print('contract fixed')
 
+        # 데이터베이스 직접 열기
         elif command == 4:
             print('input \'.exit\' to terminate')
             os.system('sqlite3 dblife.db')
 
+        # 연말정산 및 내년도로 넘어가기
         elif command == 5:
+            # 현재 연도
             year = int(search_max_min_db('Fyear', 'FINANCE'))
+            # 안내 문구 출력
             print('%s년 연말정산을 진행하고 다음 년도로 넘어갑니다.' % year)
 
             # 자금 계산
@@ -79,6 +86,7 @@ while True:
                 'SELECT SUM(Premium) FROM (SELECT COUNT(C.Ctype) * Premium AS Premium FROM Ctype T, CONTRACT C WHERE C.Ctype = T.Ctype GROUP BY C.Ctype)')
             Payout = execute_db(
                 'SELECT SUM(Payout) FROM (SELECT COUNT(C.Ctype) * Payout AS Payout FROM Ctype T, CONTRACT C WHERE C.Ctype = T.Ctype AND C.Cactive = 1 GROUP BY C.Ctype)')
+            # 발동된 계약이 NULL값일 경우 계산을 위해 0으로 변경
             if Payout == None:
                 Payout = 0
 
@@ -99,10 +107,11 @@ while True:
                 execute_db('UPDATE CLIENT SET CLhistory = %d WHERE CLno = %d' % (CLhistory[i], CLhistory_id[i]),
                            role='else')
 
+            # 가장 많은 금액을 지불한 고객 구하기
             vip = execute_db('SELECT CLname from CLIENT where CLhistory = (Select max(CLhistory) from CLIENT)',
                              role='findmany')
 
-            # 직원 정보 업데이트
+            # 직원 정보 업데이트 - 연차 +1 & 승진
             execute_db('UPDATE EMPLOYEE SET Eyear = Eyear + 1', role='else')
             execute_db('UPDATE EMPLOYEE SET Erole = 1 WHERE Eyear >= 5 AND Eyear < 7', role='else')
             execute_db('UPDATE EMPLOYEE SET Erole = 2 WHERE Eyear >= 7 AND Eyear < 10', role='else')
@@ -110,9 +119,11 @@ while True:
             execute_db('UPDATE EMPLOYEE SET Erole = 4 WHERE Eyear >= 15 AND Eyear < 19', role='else')
             execute_db('UPDATE EMPLOYEE SET Erole = 5 WHERE Eyear >= 19', role='else')
 
+            # 직원 정보 업데이트 - 승진자 조사
             promotion = execute_db(
                 'SELECT Ename FROM EMPLOYEE WHERE Eyear=5 OR Eyear=7 OR Eyear=10 OR Eyear=15 OR Eyear=19', role='findmany')
 
+            # 직원 정보 업데이트 - 연봉 인상
             execute_db('UPDATE EMPLOYEE SET Ewage = 2600 + 200 * Eyear WHERE Eyear <= 2', role='else')
             execute_db('UPDATE EMPLOYEE SET Ewage = 3300 WHERE Eyear = 3', role='else')
             execute_db('UPDATE EMPLOYEE SET Ewage = 4200 WHERE Eyear = 4', role='else')
@@ -123,9 +134,12 @@ while True:
             execute_db('UPDATE EMPLOYEE SET Ewage = 10000 WHERE Eyear = 19', role='else')
             execute_db('UPDATE EMPLOYEE SET Ewage = 10100 WHERE Eyear = 20', role='else')
 
+            # 가장 수익이 좋은 직원 조사
             mvp = execute_db(
                 'SELECT Ename FROM EMPLOYEE WHERE Eno = (SELECT Eno FROM (SELECT Eno, COUNT(Eno) * 100 AS Ebonus FROM CONTRACT GROUP BY Eno ORDER BY Ebonus DESC LIMIT 1))',
                 role='findmany')
+
+            # 보너스 계산
             Ebonus_id = execute_db('SELECT Eno FROM CONTRACT GROUP BY Eno', role='findmany')
             Ebonus = execute_db('SELECT COUNT(Eno) * 100 AS Ebonus FROM CONTRACT GROUP BY Eno', role='findmany')
 
@@ -139,6 +153,7 @@ while True:
                 'SELECT SUM(Premium) FROM (SELECT COUNT(C.Ctype) * Premium AS Premium FROM Ctype T, CONTRACT C WHERE C.Ctype = T.Ctype GROUP BY C.Ctype)')
             Payout = 0
 
+            # 내년 자금은 우선 올해 자금으로 입력
             create_db('FINANCE', [year + 1, Capital, LaborCost, Premium, Payout, BonusCost])
 
             # 흑자여부 계산
@@ -155,6 +170,7 @@ while True:
             print('분석 결과입니다.\n')
             print('올해 남은 금액은 %d 원입니다.' % Capital)
             print('한 해간 결산 결과는 %s 입니다. 변동 금액: %d 원' % (finance_result, Difference))
+
             print('\n승진한 사람 명단입니다. 축하합니다.')
             for person in promotion:
                 print('  ' + person)
@@ -165,14 +181,19 @@ while True:
             for person in vip:
                 print('  ' + person)
 
+        # 분석 & 분석 결과 열람
         elif command == 6:
+            # 현재 연도 구하기
             year = int(search_max_min_db('Fyear', 'FINANCE'))
+
+            # 가장 수익이 좋은 직원 & 가장 보험금을 많이 지급한 고객 구하기
             mvp = execute_db(
                 'SELECT Ename FROM EMPLOYEE WHERE Eno = (SELECT Eno FROM (SELECT Eno, COUNT(Eno) * 100 AS Ebonus FROM CONTRACT GROUP BY Eno ORDER BY Ebonus DESC LIMIT 1))',
                 role='findmany')
             vip = execute_db('SELECT CLname from CLIENT where CLhistory = (Select max(CLhistory) from CLIENT)',
                              role='findmany')
 
+            # 결과 출력
             print('가장 실적이 좋았던 직원 명단입니다. 축하합니다.')
             for person in mvp:
                 print('  ' + person)
@@ -180,6 +201,7 @@ while True:
             for person in vip:
                 print('  ' + person)
 
+            # 현재 자금 상황 출력 (연말정산에 비해 엄밀하지 않음, 참고용)
             total_finance = [execute_db('SELECT Capital FROM FINANCE WHERE Fyear = %d' % year),
                              execute_db('SELECT LaborCost FROM FINANCE WHERE Fyear = %d' % year),
                              execute_db('SELECT Premium FROM FINANCE WHERE Fyear = %d' % year),
@@ -194,14 +216,19 @@ while True:
             for k, v in result.items():
                 print(f"{k}: {v}")
 
+        # 프로그램 종료
         elif command == 7:
             break
+
+        # 잘못된 명령어일 경우
         else:
             print("Invalid Command!")
 
+    # 오류 처리 코드
     except Exception as e:
         print("오류가 발생했습니다. 처음으로 돌아갑니다.")
         print("오류내용:", e)
 
+    # 프로그램 실행
     input("\n\n계속하려면 Enter를 누르세요")
     os.system("cls")
