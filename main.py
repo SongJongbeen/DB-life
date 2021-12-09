@@ -4,24 +4,30 @@ import os
 
 while True:
     try:
+        # 메뉴 인터페이스
         print('')
         print('0. new contract 1. new employee 2. activate contract 3. fix contract '
               '4. open db 5. next year 6. analysis 7. terminate program')
+        # 메뉴 입력
         command = int(input('command: '))
+        # 새로운 계약
         if command == 0:
+            # 사원번호와 고객번호를 입력받음.
             key = search_max_min_db('Cno', 'CONTRACT') + 1
             Eno = int(input('input the number of employee in charge: '))
             CLno = int(input('input the number of the client (if new client, input 0): '))
-            if CLno == 0:
+            if CLno == 0: # 신규 고객인 경우 
                 CL_key = search_max_min_db('CLno', 'CLIENT') + 1
                 CLname = input('input the name of client: ')
                 Rname = input('input the name of recipient: ')
                 CLdata = [CL_key, CLname, Rname, 0]
                 create_db('CLIENT', CLdata)
-            else:
+            else:  # 아닌 경우
+                # 데이터 베이스에서 고객 번호를 가지고 온다.
                 CL_list = execute_db('SELECT CLno FROM CLIENT', role='findmany')
                 CL_list = dict.fromkeys(CL_list, 0)
-                try:
+                # 고객이 존재 하는지 확인 후 처리
+                try: 
                     CL_list[CLno]
                 except KeyError:
                     print('존재하지 않는 고객입니다.')
@@ -31,7 +37,7 @@ while True:
                     continue
 
                 CL_key = CLno
-
+            # 계약 타입을 입력받고 데이터베이스에 추가함.
             Ctype = input('input the type of the contract: ')
             Cdata = [key, Eno, CL_key, Ctype, 0]
             create_db('CONTRACT', Cdata)
@@ -78,6 +84,7 @@ while True:
 
             prev_Capital = Capital
             Capital = Capital - LaborCost - BonusCost - Payout + Premium
+            print(Capital)
             update_db('FINANCE', 'Fyear', year, 'Capital', Capital)
 
             # 발동된 계약 제거
