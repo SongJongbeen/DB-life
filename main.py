@@ -60,8 +60,8 @@ while True:
         # 계약 내용 수정
         elif command == 3:
             key = input('input the contract code: ')
-            print('which part do you want to fix? 1. employee in charge 2. client 3. contract type')
-            field = input('input: ')
+            print('Eno (Employee Number) / CLno (Client Number / Ctype (contract type)')
+            field = input('input the field name: ')
             new_data = input('input new data: ')
             update_db('CONTRACT', 'Cno', key, field, new_data)
             print('contract fixed')
@@ -92,7 +92,6 @@ while True:
 
             prev_Capital = Capital
             Capital = Capital - LaborCost - BonusCost - Payout + Premium
-            print(Capital)
             update_db('FINANCE', 'Fyear', year, 'Capital', Capital)
 
             # 발동된 계약 제거
